@@ -4,7 +4,7 @@ using { Language, managed }  from '@sap/cds/common';
 type String50 : String(50);
 
 entity Categories{
-    key id : UUID;
+    key id : Integer;
         name: String50;
         description : String(10); 
         Courses : Association to many Courses on Courses.category= $self;

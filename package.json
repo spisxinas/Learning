@@ -6,12 +6,13 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "@sap/cds": "^7",
-    "express": "^4",
-    "@sap/cds-hana": "^2"
+    "@sap/cds": "^6",
+    "@sap/cds-hana": "^2",
+    "express": "^4"
   },
   "scripts": {
-    "start": "cds-serve"
+    "start": "cds-serve",
+    "build": "cds build --production"
   },
   "cds": {
     "build": {
