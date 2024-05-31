@@ -3,95 +3,138 @@ ID: Learning
 description: A simple CAP project.
 version: 1.0.0
 modules:
-  - name: Learning-srv
-    type: nodejs
-    path: gen/srv
-    requires:
-      - name: Learning-db
-      - name: uaa_Learning
-    provides:
-      - name: srv-api
-        properties:
-          srv-url: ${default-url}
+- name: Learning-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: Learning-db
+  - name: uaa_Learning
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+    readiness-health-check-http-endpoint: /health
+    readiness-health-check-type: http
+  build-parameters:
+    builder: npm
+- name: Learning-db-deployer
+  type: hdb
+  path: db
+  requires:
+  - name: Learning-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: Learning-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: Learning-destination-service
     parameters:
-      buildpack: nodejs_buildpack
-      readiness-health-check-http-endpoint: /health
-      readiness-health-check-type: http
-    build-parameters:
-      builder: npm
-  - name: Learning-db-deployer
-    type: hdb
-    path: db
-    requires:
-      - name: Learning-db
+      content-target: true
+  - name: Learning_html_repo_host
     parameters:
-      buildpack: nodejs_buildpack
-  - name: Learning-destination-content
-    type: com.sap.application.content
-    requires:
-      - name: Learning-destination-service
-        parameters:
-          content-target: true
-      - name: Learning_html_repo_host
-        parameters:
-          service-key:
-            name: Learning_html_repo_host-key
-      - name: uaa_Learning
-        parameters:
-          service-key:
-            name: uaa_Learning-key
+      service-key:
+        name: Learning_html_repo_host-key
+  - name: uaa_Learning
     parameters:
-      content:
+      service-key:
+        name: uaa_Learning-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: managerAppRoouter_Learning_html_repo_host
+          ServiceInstanceName: Learning-html5-app-host-service
+          ServiceKeyName: Learning_html_repo_host-key
+          sap.cloud.service: managerAppRoouter
+        - Authentication: OAuth2UserTokenExchange
+          Name: managerAppRoouter_uaa_Learning
+          ServiceInstanceName: Learning-xsuaa-service
+          ServiceKeyName: uaa_Learning-key
+          sap.cloud.service: managerAppRoouter
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: Learning-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: Learning_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - learninglistreportlearningapp.zip
+      name: learninglistreportlearningapp
+      target-path: resources/
+- name: learninglistreportlearningapp
+  type: html5
+  path: app/learningapp
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: Learning-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+- name: Learning-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
         instance:
           destinations:
-            - Name: managerAppRoouter_Learning_html_repo_host
-              ServiceInstanceName: Learning-html5-app-host-service
-              ServiceKeyName: Learning_html_repo_host-key
-              sap.cloud.service: managerAppRoouter
-            - Authentication: OAuth2UserTokenExchange
-              Name: managerAppRoouter_uaa_Learning
-              ServiceInstanceName: Learning-xsuaa-service
-              ServiceKeyName: uaa_Learning-key
-              sap.cloud.service: managerAppRoouter
-          existing_destinations_policy: ignore
-    build-parameters:
-      no-source: true
-resources:
-  - name: Learning-db
-    type: com.sap.xs.hdi-container
-    parameters:
-      service: hana
-      service-plan: hdi-shared
-  - name: Learning-destination-service
-    type: org.cloudfoundry.managed-service
-    parameters:
-      config:
-        HTML5Runtime_enabled: true
-        version: 1.0.0
-      service: destination
-      service-name: Learning-destination-service
-      service-plan: lite
-  - name: Learning_html_repo_host
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: html5-apps-repo
-      service-name: Learning-html5-app-host-service
-      service-plan: app-host
-  - name: uaa_Learning
-    type: org.cloudfoundry.managed-service
-    parameters:
-      path: ./xs-security.json
-      service: xsuaa
-      service-name: Learning-xsuaa-service
-      service-plan: application
-      config:
-        xsappname: Learning-${org}-${space}
-        tenant-mode: dedicated
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          - Authentication: NoAuthentication
+            HTML5.DynamicDestination: true
+            HTML5.ForwardAuthToken: true
+            Name: Learning-srv-api
+            ProxyType: Internet
+            Type: HTTP
+            URL: ~{srv-api/srv-url}
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: Learning-destination-service
+    service-plan: lite
+  requires:
+  - name: srv-api
+- name: Learning_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: Learning-html5-app-host-service
+    service-plan: app-host
+- name: uaa_Learning
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      tenant-mode: dedicated
+      xsappname: Learning-${org}-${space}
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: Learning-xsuaa-service
+    service-plan: application
 parameters:
+  deploy_mode: html5-repo
   enable-parallel-deployments: true
 build-parameters:
   before-all:
-    - builder: custom
-      commands:
-        - npm ci
-        - npx cds build --production
+  - builder: custom
+    commands:
+    - npm ci
+    - npx cds build --production

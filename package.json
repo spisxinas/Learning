@@ -13,7 +13,10 @@
   },
   "scripts": {
     "start": "cds-serve",
-    "build": "cds build --production"
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "watch-learningapp": "cds watch --open learningapp/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy Learning --delete-services --delete-service-keys --delete-service-brokers",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
   },
   "cds": {
     "build": {
@@ -33,5 +36,11 @@
       },
       "auth": "xsuaa"
     }
+  },
+  "sapux": [
+    "app/learningapp"
+  ],
+  "devDependencies": {
+    "rimraf": "^5.0.5"
   }
 }
