@@ -1,0 +1,169 @@
+{
+    "_version": "1.59.0",
+    "sap.app": {
+        "id": "learninglistreport.learningapp",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:lrop",
+            "version": "1.13.5",
+            "toolsId": "2ad098a8-3873-44fa-b538-d2ada9e0f653"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "e-learning/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.124.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.ushell": {},
+                "sap.fe.templates": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "learninglistreport.learningapp.i18n.i18n"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "resources": {
+            "css": []
+        },
+        "routing": {
+            "config": {},
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "CategoryList",
+                    "target": "CategoryList"
+                },
+                {
+                    "pattern": "Category({key}):?query:",
+                    "name": "CategoryObjectPage",
+                    "target": "CategoryObjectPage"
+                },
+                {
+                    "pattern": "Category({key})/Courses({key2}):?query:",
+                    "name": "CoursesObjectPage",
+                    "target": "CoursesObjectPage"
+                }
+            ],
+            "targets": {
+                "CategoryList": {
+                    "type": "Component",
+                    "id": "CategoryList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/Category",
+                            "variantManagement": "Page",
+                            "navigation": {
+                                "Category": {
+                                    "detail": {
+                                        "route": "CategoryObjectPage"
+                                    }
+                                }
+                            },
+                            "controlConfiguration": {
+                                "@com.sap.vocabularies.UI.v1.LineItem": {
+                                    "tableSettings": {
+                                        "type": "ResponsiveTable"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "CategoryObjectPage": {
+                    "type": "Component",
+                    "id": "CategoryObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/Category",
+                            "navigation": {
+                                "Courses": {
+                                    "detail": {
+                                        "route": "CoursesObjectPage"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "CoursesObjectPage": {
+                    "type": "Component",
+                    "id": "CoursesObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/Category/Courses"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": [],
+        "archeType": "transactional"
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "managerAppRoouter"
+    }
+}
